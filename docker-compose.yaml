@@ -1,0 +1,111 @@
+networks:
+  cassandra-net:
+    driver: bridge
+
+x-healthcheck: &cassandra_healthcheck
+  healthcheck:
+    test: ["CMD", "cqlsh", "-e", "SELECT release_version FROM system.local"]
+    interval: 30s
+    start_period: 300s
+    timeout: 20s
+    retries: 5
+
+services:
+
+  cassandra-1:
+    image: "cassandra:4.1.8"
+    container_name: "cassandra-1"
+    hostname: cassandra-1
+    ports:
+      - "7000:7000"
+      - "9042:9042"
+    networks:
+      - cassandra-net
+    env_file:
+      - .env
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra-1
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-1
+
+    restart: on-failure
+    <<: *cassandra_healthcheck
+
+  cassandra-2:
+    image: "cassandra:4.1.8"
+    container_name: "cassandra-2"
+    hostname: cassandra-2
+    ports:
+      - "9043:9042"
+    networks:
+      - cassandra-net
+    env_file:
+      - .env
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra-2
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-2
+
+    depends_on:
+      cassandra-1:
+        condition: service_healthy
+    restart: on-failure
+    <<: *cassandra_healthcheck
+
+  cassandra-3:
+    image: "cassandra:4.1.8"
+    container_name: "cassandra-3"
+    hostname: cassandra-3
+    ports:
+      - "9044:9042"
+    networks:
+      - cassandra-net
+    env_file:
+      - .env
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra-3
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-3
+
+    depends_on:
+      cassandra-2:
+        condition: service_healthy
+    restart: on-failure
+    <<: *cassandra_healthcheck
+
+  cassandra-4:
+    image: "cassandra:4.1.8"
+    container_name: "cassandra-4"
+    hostname: cassandra-4
+    ports:
+      - "9045:9042"
+    networks:
+      - cassandra-net
+    env_file:
+      - .env
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra-4
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra-4
+
+    depends_on:
+      cassandra-3:
+        condition: service_healthy
+    restart: on-failure
+    <<: *cassandra_healthcheck
+
+  cassandra_client:
+    build:
+      context: ./cassandra_client
+      dockerfile: Dockerfile
+    container_name: "cassandra-client"
+    hostname: cassandra_client
+    networks:
+      - cassandra-net
+    working_dir: /app
+    command: ["tail", "-f", "/dev/null"]
+    depends_on:
+      cassandra-4:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./cassandra_client:/app
+    entrypoint: >
+      sh -c "pip install -r requirements.txt && tail -f /dev/null"

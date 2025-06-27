@@ -1,0 +1,16 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore virtual environments
+venv/
+
+# Ignore build and temporary files
+*.log
+*.tmp
+
+# Ignore Docker-related files
+Dockerfile
+cassandra_client/Dockerfile
+.dockerignore
