@@ -1,15 +1,26 @@
 import uuid
+import time
+import random
+import argparse
 from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
-import random
-import time
 
-# Connect to Cassandra
+# --- Parse command-line argument ---
+parser = argparse.ArgumentParser(description="Trace update and select for a specific bird.")
+parser.add_argument('--bird_id', type=str, required=True, help='UUID of the bird to trace')
+args = parser.parse_args()
+
+try:
+    bird_id = uuid.UUID(args.bird_id)
+except ValueError:
+    print("❌ Invalid bird UUID format.")
+    exit(1)
+
+print(f"Selected bird ID: {bird_id}")
+
+# --- Connect to Cassandra ---
 cluster = Cluster(['cassandra-1', 'cassandra-2'])
 session = cluster.connect('bird_tracking')
-
-bird_id = uuid.UUID("e7f4af4f4fd54646810d3a5bd7abc81e") 
-print(f"Selected bird ID: {bird_id}")
 
 # --- UPDATE with trace ---
 print("\nRunning update with trace...")
@@ -28,7 +39,7 @@ if update_trace:
 else:
     print("No update trace available.")
 
-# המתן מעט כדי להפריד את השאילתות
+# --- Delay between queries ---
 time.sleep(2)
 
 # --- SELECT with trace ---

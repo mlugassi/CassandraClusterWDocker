@@ -59,5 +59,5 @@ python Q3/bird_token.py
 
 ### 5. Q3.5 - For tracing and failure simulation (after shutdown cassandra-1)
 ```bash
-python Q3/update_and_select_bird_token_when_shutdwn.py
+python Q3/update_and_select_bird_token_when_shutdwn.py --bird_id <bird_id_from_choosen_by_prev_script>
 ```
